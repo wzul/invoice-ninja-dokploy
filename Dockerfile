@@ -47,8 +47,9 @@ ARG php_require="bcmath gd gmp mbstring pdo_mysql zip"
 ARG php_suggest="exif imagick intl pcntl saxon soap"
 ARG php_extra="opcache"
 
-# Install system dependencies
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends \
+# Install system dependencies (export so debconf/preconfig see it)
+RUN export DEBIAN_FRONTEND=noninteractive \
+    && apt-get update && apt-get install -y --no-install-recommends \
     libfcgi-bin \
     mariadb-client \
     gpg \
@@ -63,10 +64,10 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-ins
     && curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | \
     gpg --dearmor -o /etc/apt/keyrings/google.gpg \
     && echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/google.gpg] https://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
-    && DEBIAN_FRONTEND=noninteractive apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends google-chrome-stable; \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends google-chrome-stable; \
     elif [ "$(dpkg --print-architecture)" = "arm64" ]; then \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    apt-get install -y --no-install-recommends \
     chromium; \
     fi \
     # Create config directory for chromium/google-chrome-stable
