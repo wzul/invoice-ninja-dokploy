@@ -13,13 +13,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 COPY --from=ghcr.io/mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
-RUN install-php-extensions zip bcmath gd mbstring
+RUN install-php-extensions zip bcmath gd mbstring gmp
 
-# Clone Invoice Ninja and install PHP deps
-RUN git clone --depth 1 --branch "${INVOICENINJA_VERSION}" \
+# Clone Invoice Ninja and install PHP deps (safe.directory so git accepts /var/www/html)
+# Use composer update so deps resolve for current PHP; repo lock file may target older PHP
+RUN git config --global --add safe.directory /var/www/html \
+    && git clone --depth 1 --branch "${INVOICENINJA_VERSION}" \
     https://github.com/invoiceninja/invoiceninja.git /var/www/html \
     && cd /var/www/html \
-    && composer install --no-dev --optimize-autoloader --no-interaction \
+    && composer update --no-dev --optimize-autoloader --no-interaction \
     && ln -s /var/www/html/resources/views/react/index.blade.php /var/www/html/public/index.html
 
 # Minimal .env for artisan during build (storage:link); replaced at runtime
@@ -38,7 +40,7 @@ RUN mv /var/www/html/public /tmp/public
 FROM php:${PHP}-fpm
 
 # PHP modules
-ARG php_require="bcmath gd mbstring pdo_mysql zip"
+ARG php_require="bcmath gd gmp mbstring pdo_mysql zip"
 ARG php_suggest="exif imagick intl pcntl saxon soap"
 ARG php_extra="opcache"
 
