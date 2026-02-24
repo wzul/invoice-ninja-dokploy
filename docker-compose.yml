@@ -8,10 +8,8 @@ services:
       - storage_data:/var/www/html/storage
       - public_data:/var/www/html/public
     depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - db
+      - redis
 
   nginx:
     image: nginx:alpine
