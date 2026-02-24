@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 COPY --from=ghcr.io/mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
-RUN install-php-extensions zip bcmath gd mbstring gmp
+RUN install-php-extensions zip bcmath gd gmp
 
 # Clone Invoice Ninja and install PHP deps (safe.directory so git accepts /var/www/html)
 # Use composer update so deps resolve for current PHP; repo lock file may target older PHP
