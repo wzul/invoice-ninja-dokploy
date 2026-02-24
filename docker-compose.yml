@@ -2,17 +2,16 @@ services:
 
   server:
     image: invoiceninja/invoiceninja-debian:${TAG:-latest}
-    container_name: ninja-app-wan
     restart: unless-stopped
     env_file: .env
     volumes:
       - storage_data:/var/www/html/storage
       - public_data:/var/www/html/public
-    # depends_on:
-    #   db:
-    #     condition: service_healthy
-    #   redis:
-    #     condition: service_healthy
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   nginx:
     image: nginx:alpine
@@ -22,13 +21,12 @@ services:
       - ./nginx/invoiceninja.conf:/etc/nginx/conf.d/invoiceninja.conf:ro
       - public_data:/var/www/html/public:ro
       - storage_data:/var/www/html/storage:ro
-    # depends_on:
-    #   server:
-    #     condition: service_healthy
+    depends_on:
+      server:
+        condition: service_healthy
 
   db:
-    image: mariadb:11.8 # 10.5+ is recommended for Invoice Ninja v5
-    container_name: ninja-db-wan
+    image: mariadb:11.8
     restart: unless-stopped
     env_file: .env
     volumes:
@@ -41,7 +39,6 @@ services:
 
   redis:
     image: redis:alpine
-    container_name: ninja-redis-wan
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
