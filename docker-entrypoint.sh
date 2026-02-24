@@ -11,8 +11,8 @@ if [ ! -d /var/www/html/storage/framework ] || [ ! -d /var/www/html/storage/logs
   chown -R www-data:www-data /var/www/html/storage
 fi
 
-# Start PHP-FPM as www-data in background
-su -s /bin/sh www-data -c "php-fpm" &
+# Start PHP-FPM as root (master opens logs/socket; workers run as www-data per pool config)
+php-fpm &
 
 # Run nginx as www-data (replaces this process)
 exec su -s /bin/sh www-data -c "nginx -g 'daemon off;'"
