@@ -26,12 +26,18 @@ RUN touch /var/run/nginx.pid \
     && mkdir -p /tmp/nginx-body /tmp/nginx-fastcgi /tmp/nginx-proxy /tmp/nginx-uwsgi /tmp/nginx-scgi \
     && chown -R www-data:www-data /var/run/nginx.pid /var/log/nginx /tmp/nginx-body /tmp/nginx-fastcgi /tmp/nginx-proxy /tmp/nginx-uwsgi /tmp/nginx-scgi
 
-# Entrypoint: start PHP-FPM in background, then nginx in foreground
+# Pristine public from base image (entrypoint copies this into the volume on every start)
+RUN mkdir -p /opt/invoiceninja-public && cp -a /var/www/html/public/. /opt/invoiceninja-public/
+
+# Pristine storage structure from base image (entrypoint copies into volume only when empty)
+RUN mkdir -p /opt/invoiceninja-storage && cp -a /var/www/html/storage/. /opt/invoiceninja-storage/
+
+# Entrypoint: sync public + init storage when empty, then start PHP-FPM and nginx
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
-# Run as non-root
-USER www-data
+# Entrypoint runs as root to restore public; it then runs services as www-data
+USER root
 
 # Persist storage and public (same as compose volumes)
 VOLUME ["/var/www/html/storage", "/var/www/html/public"]
