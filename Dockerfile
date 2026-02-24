@@ -43,9 +43,10 @@ RUN mv /var/www/html/public /tmp/public
 FROM php:${PHP}-fpm
 
 # PHP modules
-ARG php_require="bcmath gd gmp mbstring pdo_mysql zip"
+# mbstring and opcache already in php image; omit to avoid install-php-extensions warnings
+ARG php_require="bcmath gd gmp pdo_mysql zip"
 ARG php_suggest="exif imagick intl pcntl saxon soap"
-ARG php_extra="opcache"
+ARG php_extra=""
 
 # Install system dependencies (export so debconf/preconfig see it)
 RUN export DEBIAN_FRONTEND=noninteractive \
