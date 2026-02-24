@@ -22,10 +22,9 @@ RUN git config --global --add safe.directory /var/www/html \
     && git clone --depth 1 --branch "${INVOICENINJA_VERSION}" \
     https://github.com/invoiceninja/invoiceninja.git /var/www/html
 
-# Composer: auth, force HTTPS, then update (memory limit for large dependency resolution)
+# Composer: auth (HTTPS used when token set), then update (memory limit for large dependency resolution)
 RUN cd /var/www/html \
     && ( [ -z "${GITHUB_PAT}" ] || composer config --global github-oauth.github.com "${GITHUB_PAT}" ) \
-    && composer config --global github-protocol https \
     && COMPOSER_MEMORY_LIMIT=-1 composer update --no-dev --optimize-autoloader --no-interaction \
     && ln -sf /var/www/html/resources/views/react/index.blade.php /var/www/html/public/index.html
 
