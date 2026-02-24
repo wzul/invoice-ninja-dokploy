@@ -3,7 +3,7 @@ ARG PHP=8.4
 FROM php:${PHP}-fpm AS prepare-app
 
 # Build app from source (override with e.g. --build-arg INVOICENINJA_VERSION=v5.10.0)
-ARG INVOICENINJA_VERSION=master
+ARG INVOICENINJA_VERSION=v5-stable
 # Pass GitHub PAT so Composer can auth (e.g. Dokploy env GITHUB_PAT as build-arg)
 ARG GITHUB_PAT
 
@@ -17,16 +17,17 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-ins
 COPY --from=ghcr.io/mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
 RUN install-php-extensions zip bcmath gd gmp
 
-# Clone Invoice Ninja and install PHP deps (safe.directory so git accepts /var/www/html)
-# Use composer update so deps resolve for current PHP; GITHUB_PAT used for Composer GitHub auth
+# Clone Invoice Ninja (safe.directory so git accepts /var/www/html)
 RUN git config --global --add safe.directory /var/www/html \
     && git clone --depth 1 --branch "${INVOICENINJA_VERSION}" \
-    https://github.com/invoiceninja/invoiceninja.git /var/www/html \
-    && cd /var/www/html \
+    https://github.com/invoiceninja/invoiceninja.git /var/www/html
+
+# Composer: auth, force HTTPS, then update (memory limit for large dependency resolution)
+RUN cd /var/www/html \
     && ( [ -z "${GITHUB_PAT}" ] || composer config --global github-oauth.github.com "${GITHUB_PAT}" ) \
     && composer config --global github-protocol https \
-    && composer update --no-dev --optimize-autoloader --no-interaction \
-    && ln -s /var/www/html/resources/views/react/index.blade.php /var/www/html/public/index.html
+    && COMPOSER_MEMORY_LIMIT=-1 composer update --no-dev --optimize-autoloader --no-interaction \
+    && ln -sf /var/www/html/resources/views/react/index.blade.php /var/www/html/public/index.html
 
 # Minimal .env for artisan during build (storage:link); replaced at runtime
 RUN cd /var/www/html \
