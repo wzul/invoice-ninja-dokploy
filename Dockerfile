@@ -2,15 +2,35 @@ ARG PHP=8.4
 
 FROM php:${PHP}-fpm AS prepare-app
 
-ARG URL=https://github.com/invoiceninja/invoiceninja/releases/latest/download/invoiceninja.tar.gz
+# Build app from source (override with e.g. --build-arg INVOICENINJA_VERSION=v5.10.0)
+ARG INVOICENINJA_VERSION=master
 
-ADD ${URL} /tmp/invoiceninja.tar.gz
+# Composer, git, and PHP extensions needed for composer install
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    unzip \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-RUN tar -xzf /tmp/invoiceninja.tar.gz -C /var/www/html \
-    && ln -s /var/www/html/resources/views/react/index.blade.php /var/www/html/public/index.html \
+COPY --from=ghcr.io/mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+RUN install-php-extensions zip bcmath gd mbstring
+
+# Clone Invoice Ninja and install PHP deps
+RUN git clone --depth 1 --branch "${INVOICENINJA_VERSION}" \
+    https://github.com/invoiceninja/invoiceninja.git /var/www/html \
+    && cd /var/www/html \
+    && composer install --no-dev --optimize-autoloader --no-interaction \
+    && ln -s /var/www/html/resources/views/react/index.blade.php /var/www/html/public/index.html
+
+# Minimal .env for artisan during build (storage:link); replaced at runtime
+RUN cd /var/www/html \
+    && cp -n .env.example .env 2>/dev/null || true \
+    && php artisan key:generate --force \
     && php artisan storage:link \
-    # Workaround for application updates
-    && mv /var/www/html/public /tmp/public
+    && rm -f .env
+
+# Workaround for application updates: sync public from image at container start
+RUN mv /var/www/html/public /tmp/public
 
 # ==================
 # InvoiceNinja image
