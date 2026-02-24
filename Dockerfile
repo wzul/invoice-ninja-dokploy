@@ -4,6 +4,8 @@ FROM php:${PHP}-fpm AS prepare-app
 
 # Build app from source (override with e.g. --build-arg INVOICENINJA_VERSION=v5.10.0)
 ARG INVOICENINJA_VERSION=master
+# Pass GitHub PAT so Composer can auth (e.g. Dokploy env GITHUB_PAT as build-arg)
+ARG GITHUB_PAT
 
 # Composer, git, and PHP extensions needed for composer install
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends \
@@ -16,11 +18,12 @@ COPY --from=ghcr.io/mlocati/php-extension-installer /usr/bin/install-php-extensi
 RUN install-php-extensions zip bcmath gd gmp
 
 # Clone Invoice Ninja and install PHP deps (safe.directory so git accepts /var/www/html)
-# Use composer update so deps resolve for current PHP; repo lock file may target older PHP
+# Use composer update so deps resolve for current PHP; GITHUB_PAT used for Composer GitHub auth
 RUN git config --global --add safe.directory /var/www/html \
     && git clone --depth 1 --branch "${INVOICENINJA_VERSION}" \
     https://github.com/invoiceninja/invoiceninja.git /var/www/html \
     && cd /var/www/html \
+    && ( [ -z "${GITHUB_PAT}" ] || composer config --global github-oauth.github.com "${GITHUB_PAT}" ) \
     && composer update --no-dev --optimize-autoloader --no-interaction \
     && ln -s /var/www/html/resources/views/react/index.blade.php /var/www/html/public/index.html
 
