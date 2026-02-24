@@ -9,8 +9,9 @@ FROM invoiceninja/invoiceninja-debian:${TAG}
 
 USER root
 
-# Install nginx
-RUN apt-get update && apt-get install -y --no-install-recommends nginx \
+# Install nginx (DEBIAN_FRONTEND=noninteractive avoids debconf warnings in CI/Dokploy)
+RUN DEBIAN_FRONTEND=noninteractive apt-get update \
+    && apt-get install -y --no-install-recommends nginx \
     && rm -rf /var/lib/apt/lists/*
 
 # Nginx config (from ./nginx/)
