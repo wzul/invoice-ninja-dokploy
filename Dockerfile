@@ -26,11 +26,16 @@ RUN touch /var/run/nginx.pid \
     && mkdir -p /tmp/nginx-body /tmp/nginx-fastcgi /tmp/nginx-proxy /tmp/nginx-uwsgi /tmp/nginx-scgi \
     && chown -R www-data:www-data /var/run/nginx.pid /var/log/nginx /tmp/nginx-body /tmp/nginx-fastcgi /tmp/nginx-proxy /tmp/nginx-uwsgi /tmp/nginx-scgi
 
-# Pristine public from base image (entrypoint copies this into the volume on every start)
-RUN mkdir -p /opt/invoiceninja-public && cp -a /var/www/html/public/. /opt/invoiceninja-public/
+# Pristine public from base image (try both common paths; base may use /var/www/app or /var/www/html)
+RUN mkdir -p /opt/invoiceninja-public && \
+  if [ -d /var/www/html/public ]; then cp -a /var/www/html/public/. /opt/invoiceninja-public/; \
+  elif [ -d /var/www/app/public ]; then cp -a /var/www/app/public/. /opt/invoiceninja-public/; fi
 
-# Pristine storage structure from base image (entrypoint copies into volume only when empty)
-RUN mkdir -p /opt/invoiceninja-storage && cp -a /var/www/html/storage/. /opt/invoiceninja-storage/
+# Pristine storage structure from base image
+RUN mkdir -p /opt/invoiceninja-storage && \
+  if [ -d /var/www/html/storage ]; then cp -a /var/www/html/storage/. /opt/invoiceninja-storage/; \
+  elif [ -d /var/www/app/storage ]; then cp -a /var/www/app/storage/. /opt/invoiceninja-storage/; \
+  else mkdir -p /opt/invoiceninja-storage/framework/cache /opt/invoiceninja-storage/framework/sessions /opt/invoiceninja-storage/framework/views /opt/invoiceninja-storage/logs /opt/invoiceninja-storage/app/public; fi
 
 # Entrypoint: sync public + init storage when empty, then start PHP-FPM and nginx
 COPY docker-entrypoint.sh /docker-entrypoint.sh
