@@ -23,8 +23,8 @@ RUN rm -f /etc/nginx/conf.d/default.conf
 
 # Ensure www-data can run nginx (pid, log, and temp paths under /tmp)
 RUN touch /var/run/nginx.pid \
-    && mkdir -p /tmp/nginx-body /tmp/nginx-fastcgi /tmp/nginx-proxy \
-    && chown -R www-data:www-data /var/run/nginx.pid /var/log/nginx /tmp/nginx-body /tmp/nginx-fastcgi /tmp/nginx-proxy
+    && mkdir -p /tmp/nginx-body /tmp/nginx-fastcgi /tmp/nginx-proxy /tmp/nginx-uwsgi /tmp/nginx-scgi \
+    && chown -R www-data:www-data /var/run/nginx.pid /var/log/nginx /tmp/nginx-body /tmp/nginx-fastcgi /tmp/nginx-proxy /tmp/nginx-uwsgi /tmp/nginx-scgi
 
 # Entrypoint: start PHP-FPM in background, then nginx in foreground
 COPY docker-entrypoint.sh /docker-entrypoint.sh
