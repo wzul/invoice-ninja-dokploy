@@ -21,8 +21,10 @@ COPY nginx/invoiceninja.conf /etc/nginx/conf.d/invoiceninja.conf
 # Remove default nginx site so our config is used
 RUN rm -f /etc/nginx/conf.d/default.conf
 
-# Ensure www-data can run nginx (pid, log paths)
-RUN touch /var/run/nginx.pid && chown -R www-data:www-data /var/run/nginx.pid /var/log/nginx
+# Ensure www-data can run nginx (pid, log, and temp paths)
+RUN touch /var/run/nginx.pid \
+    && mkdir -p /var/lib/nginx/body /var/lib/nginx/fastcgi /var/lib/nginx/proxy /var/lib/nginx/uwsgi /var/lib/nginx/scgi \
+    && chown -R www-data:www-data /var/run/nginx.pid /var/log/nginx /var/lib/nginx
 
 # Entrypoint: start PHP-FPM in background, then nginx in foreground
 COPY docker-entrypoint.sh /docker-entrypoint.sh
