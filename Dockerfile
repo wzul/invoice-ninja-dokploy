@@ -24,6 +24,7 @@ RUN git config --global --add safe.directory /var/www/html \
     https://github.com/invoiceninja/invoiceninja.git /var/www/html \
     && cd /var/www/html \
     && ( [ -z "${GITHUB_PAT}" ] || composer config --global github-oauth.github.com "${GITHUB_PAT}" ) \
+    && composer config --global github-protocol https \
     && composer update --no-dev --optimize-autoloader --no-interaction \
     && ln -s /var/www/html/resources/views/react/index.blade.php /var/www/html/public/index.html
 
