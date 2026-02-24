@@ -2,7 +2,7 @@ services:
 
   server:
     image: invoiceninja/invoiceninja-debian:${TAG:-latest}
-    container_name: ninja-app
+    container_name: ninja-app-wan
     restart: unless-stopped
     env_file: .env
     volumes:
@@ -27,7 +27,7 @@ services:
 
   db:
     image: mariadb:11.8 # 10.5+ is recommended for Invoice Ninja v5
-    container_name: ninja-db
+    container_name: ninja-db-wan
     restart: unless-stopped
     env_file: .env
     volumes:
@@ -40,7 +40,7 @@ services:
 
   redis:
     image: redis:alpine
-    container_name: ninja-redis
+    container_name: ninja-redis-wan
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
