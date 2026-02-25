@@ -88,4 +88,4 @@ HEALTHCHECK --start-period=100s \
     CMD REMOTE_ADDR=127.0.0.1 REQUEST_URI=/health REQUEST_METHOD=GET SCRIPT_FILENAME=/var/www/html/public/index.php cgi-fcgi -bind -connect 127.0.0.1:9000 | grep '{"status":"ok","message":"API is healthy"}'
 
 ENTRYPOINT ["/usr/local/bin/init.sh"]
-CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]`
+CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
