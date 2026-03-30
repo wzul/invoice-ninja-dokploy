@@ -1,6 +1,6 @@
 services:
   server:
-    image: invoiceninja/invoiceninja-debian:${TAG:-latest}
+    image: invoiceninja/invoiceninja-debian:5.13
     restart: unless-stopped
     env_file: .env
     volumes:
